@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       medicalRecord: /\b(patient|medical record|diagnosis|treatment)[\s:][\w\s]+\b/gi,
     };
 
-    const detectedPII = {};
+    const detectedPII: Record<string, any> = {};
     let anonymizedText = text;
 
     // Detect PII types
