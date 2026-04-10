@@ -69,7 +69,7 @@ export default function Home() {
               <p className="text-slate-300 mb-3">POST /api/anonymize</p>
               <p className="text-sm text-slate-400">Detects and anonymizes PII in medical text. Returns detected types and anonymized version.</p>
               <code className="text-xs bg-slate-800 p-2 rounded block mt-2 text-green-400">
-                curl -X POST https://iim-mumbai.vercel.app/api/anonymize -H "Content-Type: application/json" -d '{"{"}text": "Contact: john@email.com, Phone: 555-1234{"}'}
+                POST /api/anonymize with text parameter
               </code>
             </div>
 
@@ -78,16 +78,16 @@ export default function Home() {
               <p className="text-slate-300 mb-3">POST /api/detections/log</p>
               <p className="text-sm text-slate-400">Log detected PII events for audit trail and analysis.</p>
               <code className="text-xs bg-slate-800 p-2 rounded block mt-2 text-green-400">
-                curl -X POST https://iim-mumbai.vercel.app/api/detections/log -H "Content-Type: application/json" -d '{"{"}type": "email", "text": "john@example.com"{"}'}
+                POST /api/detections/log with type and text
               </code>
             </div>
 
             <div className="p-6 rounded-lg bg-slate-700/50 border border-blue-500 hover:bg-slate-700/70 transition">
               <h3 className="text-xl font-bold mb-2 text-blue-400">3. Query Detections</h3>
-              <p className="text-slate-300 mb-3">GET /api/detections/query?type=email&limit=10</p>
+              <p className="text-slate-300 mb-3">GET /api/detections/query</p>
               <p className="text-sm text-slate-400">Retrieve detected PII events with filtering and pagination.</p>
               <code className="text-xs bg-slate-800 p-2 rounded block mt-2 text-green-400">
-                curl https://iim-mumbai.vercel.app/api/detections/query?type=email&limit=10
+                GET /api/detections/query?type=email&limit=10
               </code>
             </div>
 
@@ -96,7 +96,7 @@ export default function Home() {
               <p className="text-slate-300 mb-3">GET /api/health</p>
               <p className="text-sm text-slate-400">Check API health and available endpoints.</p>
               <code className="text-xs bg-slate-800 p-2 rounded block mt-2 text-green-400">
-                curl https://iim-mumbai.vercel.app/api/health
+                GET /api/health
               </code>
             </div>
           </div>
