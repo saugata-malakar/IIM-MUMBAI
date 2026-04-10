@@ -1,0 +1,10 @@
+Column,PII_Types
+ethnicity,['direct (heuristic)']
+visit_date,['date']
+patient_id,['direct (heuristic)']
+name,['direct (heuristic)']
+email,['email']
+address,['zipcode']
+dob,['date']
+insurance_provider,['direct (heuristic)']
+phone,['direct (heuristic)']
