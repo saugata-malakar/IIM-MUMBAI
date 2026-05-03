@@ -1,0 +1,10 @@
+Column,pii_entities
+ethnicity,[]
+visit_date,[]
+patient_id,"[('patient_id', 'ORG')]"
+name,[]
+email,[]
+address,[]
+dob,[]
+insurance_provider,[]
+phone,[]

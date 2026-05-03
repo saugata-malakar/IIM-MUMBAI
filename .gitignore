@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (large files - keep samples only)
+*.zip
+final_pii_detection_audit.csv
+pii_detection_dashboard*.html
+
+# Streamlit
+.streamlit/
+
+# Benchmark outputs
+benchmark_results/
+
+# Node (if frontend added)
+node_modules/
+.next/
+.env.local

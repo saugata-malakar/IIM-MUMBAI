@@ -1,0 +1,292 @@
+# Configuration for Medical Data Anonymization Project
+
+## Dataset Configuration
+datasets:
+  text_medical:
+    path: "./data/text_medical/"
+    format: "csv"
+    quasi_identifiers:
+      - "patient_id"
+      - "age"
+      - "gender"
+      - "location"
+      - "hospital"
+    sensitive_attributes:
+      - "diagnosis"
+      - "treatment"
+      - "medication"
+    description: "Text-based medical records and e-prescriptions"
+    
+  structured_eprescription:
+    path: "./data/eprescription/"
+    format: "csv"
+    quasi_identifiers:
+      - "doctor_id"
+      - "patient_age_group"
+      - "clinic_location"
+      - "prescription_date"
+    sensitive_attributes:
+      - "medication_name"
+      - "dosage"
+      - "instructions"
+      - "diagnosis_code"
+    description: "Structured e-prescription data"
+    
+  images_handwritten:
+    path: "./data/images/prescriptions_handwritten/"
+    format: "image"
+    image_types: ["jpg", "png", "tiff"]
+    anonymization_targets:
+      - "patient_name"
+      - "patient_id"
+      - "doctor_name"
+      - "clinic_name"
+      - "phone_numbers"
+    description: "Handwritten medical prescriptions (images)"
+    
+  images_clinical_photos:
+    path: "./data/images/clinical_photos/"
+    format: "image"
+    image_types: ["jpg", "png"]
+    anonymization_targets:
+      - "face"
+      - "identifying_marks"
+      - "patient_identifiers"
+    description: "Clinical photographs and medical images"
+    
+  xrays:
+    path: "./data/images/xrays/"
+    format: "image"
+    image_types: ["jpg", "png", "dcm"]
+    anonymization_targets:
+      - "patient_name"
+      - "patient_id"
+      - "facility_name"
+      - "scan_date"
+    description: "X-ray and medical imaging data"
+
+## Algorithm Configuration
+
+algorithms:
+  
+  generalization_kAnonymity:
+    enabled: true
+    type: "generalization"
+    description: "K-anonymity based generalization with suppression"
+    parameters:
+      k_value: 5
+      generalization_hierarchies: true
+      suppression_threshold: 0.1
+    quasi_identifiers: ["age", "gender", "location"]
+    paper_reference: "Sweeney L. (2002) k-anonymity: a model for protecting privacy"
+    assigned_to: "Person 1"
+    status: "not_started"
+    
+  perturbation_chaos:
+    enabled: true
+    type: "perturbation"
+    description: "Chaos-based perturbation with logistic maps (existing implementation)"
+    parameters:
+      lambda_value: 3.99
+      iterations: 400
+      perturbation_strength: 0.2
+    quasi_identifiers: ["age", "income", "dates"]
+    paper_reference: "Privacy_algorithm.py (existing)"
+    assigned_to: "Person 2"
+    status: "in_progress"
+    
+  differential_privacy_laplace:
+    enabled: true
+    type: "differential_privacy"
+    description: "Differential privacy with Laplace mechanism"
+    parameters:
+      epsilon: 0.5
+      delta: 0.00001
+      sensitivity: 1.0
+    quasi_identifiers: ["age", "numerical_values"]
+    paper_reference: "Dwork, C. (2006) Differential Privacy"
+    assigned_to: "Person 2"
+    status: "not_started"
+    
+  pseudonymization_deterministic:
+    enabled: true
+    type: "pseudonymization"
+    description: "Deterministic pseudonymization with salt"
+    parameters:
+      hash_algorithm: "sha256"
+      salt_path: "./config/salt.key"
+      preserve_format: false
+    quasi_identifiers: ["patient_id", "doctor_id"]
+    paper_reference: "General anonymization practice"
+    assigned_to: "Person 1"
+    status: "not_started"
+    
+  image_blur_masking:
+    enabled: true
+    type: "image_masking"
+    description: "Blur/pixelation of sensitive regions in images"
+    parameters:
+      blur_strength: 25
+      detection_model: "yolov8"  # For face detection
+      target_objects: ["face", "text"]
+    data_modalities: ["handwritten_prescriptions", "clinical_photos"]
+    assigned_to: "Person 3"
+    status: "not_started"
+    
+  image_face_removal:
+    enabled: true
+    type: "image_removal"
+    description: "Remove/redact faces and identifying markers"
+    parameters:
+      face_detection_confidence: 0.7
+      redaction_method: "black_box"  # or "blur", "pixelate"
+      preserve_image_size: true
+    data_modalities: ["clinical_photos"]
+    assigned_to: "Person 3"
+    status: "not_started"
+    
+  xray_annotation_removal:
+    enabled: true
+    type: "image_ocr_redaction"
+    description: "Detect and remove text annotations from X-rays"
+    parameters:
+      ocr_model: "tesseract"
+      remove_boxes: [
+        {"type": "patient_name"},
+        {"type": "patient_id"},
+        {"type": "facility_name"},
+        {"type": "dates"}
+      ]
+    data_modalities: ["xrays"]
+    assigned_to: "Person 3"
+    status: "not_started"
+    
+  synthetic_data_generation:
+    enabled: false  # Advanced, optional
+    type: "synthesis"
+    description: "Generate synthetic medical data preserving distributions"
+    parameters:
+      method: "GAN"  # or "VAE", "DDP"
+      synthetic_records_ratio: 0.2
+      preserve_correlations: true
+    assigned_to: "Person 4"
+    status: "not_started"
+
+## Evaluation Metrics Configuration
+
+evaluation:
+  privacy_metrics:
+    - name: "privacy_score"
+      weight: 0.4
+      description: "Measure of attribute protection"
+      
+    - name: "k_anonymity"
+      weight: 0.2
+      description: "K-anonymity level achieved"
+      threshold: 5  # Minimum k value required
+      
+    - name: "disclosure_risk"
+      weight: 0.2
+      description: "Risk of re-identification"
+      
+    - name: "differential_privacy_epsilon"
+      weight: 0.2
+      description: "DP epsilon parameter (lower is better)"
+
+  utility_metrics:
+    - name: "utility_score"
+      weight: 0.4
+      description: "Data utility preservation"
+      
+    - name: "information_loss"
+      weight: 0.3
+      description: "Information lost during anonymization"
+      
+    - name: "statistical_similarity"
+      weight: 0.3
+      description: "Statistical distribution similarity to original"
+
+  performance_metrics:
+    - name: "processing_time_ms"
+      importance: "medium"
+      
+    - name: "memory_usage_mb"
+      importance: "medium"
+      
+    - name: "scalability"
+      importance: "high"
+
+## DPDP Compliance Checklist
+
+dpdp_compliance:
+  requirements:
+    - name: "No Direct Identifiers Retained"
+      check: "Verify no names, IDs, phone numbers in output"
+      responsible: "QA Team"
+      
+    - name: "Irreversibility"
+      check: "Verify anonymization cannot be reversed"
+      responsible: "Security Lead"
+      
+    - name: "Linkage Attack Resistance"
+      check: "Test against known linkage attacks"
+      responsible: "Security Lead"
+      
+    - name: "Inference Attack Resistance"
+      check: "Test against inference-based re-identification"
+      responsible: "Data Science Lead"
+      
+    - name: "Audit Trail"
+      check: "Maintain anonymization process logs"
+      responsible: "Data Engineer"
+
+## Output Configuration
+
+outputs:
+  text_anonymization:
+    format: "csv"
+    path: "./output/anonymized_text/"
+    include_audit_trail: true
+    include_metrics: true
+    
+  image_anonymization:
+    format: "image"
+    path: "./output/anonymized_images/"
+    include_metadata: true
+    anonymization_info_file: "anonymization_report.json"
+    
+  comparison_report:
+    format: "html"
+    path: "./output/reports/"
+    include_visualizations: true
+    include_recommendations: true
+
+## Testing Configuration
+
+testing:
+  unit_tests:
+    enabled: true
+    coverage_target: 80
+    
+  integration_tests:
+    enabled: true
+    test_datasets:
+      - "synthetic_small"
+      - "synthetic_large"
+      - "real_anonymized"
+      
+  security_tests:
+    enabled: true
+    tests:
+      - "linkage_attack_simulation"
+      - "inference_attack_simulation"
+      - "re_identification_risk"
+      - "pii_leakage_detection"
+
+## Logging Configuration
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "./logs/anonymization.log"
+  audit_file: "./logs/audit_trail.log"
+  format: "json"  # or "plain"

@@ -1,0 +1,5 @@
+ChaosPerturbation: Applied on Age column using logistic map
+k-Anonymity: ZIP generalized, Age grouped
+ℓ-Diversity: Score: 0.11
+t-Closeness: KL Divergence: 1.4079
+DifferentialPrivacy: Laplace noise added to BloodSugar with ε=0.5
