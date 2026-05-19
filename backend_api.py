@@ -1860,12 +1860,7 @@ def get_reidentification_values():
         if reidentification_simulator is None:
             raise HTTPException(status_code=400, detail="Dataset not indexed.")
         
-        values = {
-            "age_ranges": reidentification_simulator.get_available_values("age_range"),
-            "genders": reidentification_simulator.get_available_values("gender"),
-            "blood_groups": reidentification_simulator.get_available_values("blood_group"),
-            "districts": reidentification_simulator.get_available_values("district"),
-        }
+        values = reidentification_simulator.get_available_values()
         
         return {"status": "success", "values": values}
     except Exception as e:
@@ -2153,6 +2148,7 @@ def export_llm_data(request: ExportLLMDataRequest):
     - pii_deidentification: De-identify clinical text
     """
     try:
+        global llm_exporter
         if llm_exporter is None:
             filepath = UPLOAD_DIR / request.dataset_filename
             if not filepath.exists():
@@ -2878,8 +2874,8 @@ def startup_event():
     print("\n[MedShield] 🚀 Initializing Clinical AI Engines...")
     try:
         # Generate dummy synthetic dataset
-        generator = SyntheticGenerator(num_records=500, data_type="medical")
-        df = generator.generate()
+        generator = SyntheticGenerator(seed=42)
+        df = generator.generate_medical_records(n=500)
         
         # We must add 'diagnosis' and 'medications' if missing because services need them
         if 'diagnosis' not in df.columns:
@@ -2889,6 +2885,20 @@ def startup_event():
         if 'medications' not in df.columns:
             meds_list = ['Metformin, Insulin', 'Amlodipine, Lisinopril', 'Atorvastatin', 'Paracetamol', 'Albuterol']
             df['medications'] = np.random.choice(meds_list, len(df))
+            
+        if 'bp_systolic' not in df.columns and 'blood_pressure' in df.columns:
+            df['bp_systolic'] = df['blood_pressure'].apply(lambda x: float(str(x).split('/')[0]) if pd.notnull(x) else 120.0)
+
+        if 'district' not in df.columns:
+            districts = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Pune']
+            df['district'] = np.random.choice(districts, len(df))
+
+        if 'age_range' not in df.columns and 'age' in df.columns:
+            df['age_range'] = pd.cut(df['age'], bins=[0, 29, 39, 49, 59, 69, 79, 120], labels=["20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]).astype(str)
+
+        # Save the dataset to UPLOAD_DIR so file-based endpoints (like LLM export) don't crash
+        df.to_csv(UPLOAD_DIR / 'final_anonymized_dataset.csv', index=False)
+        print("[MedShield] 💾 Saved synthetic dataset to final_anonymized_dataset.csv")
 
         # Initialize globals
         global diagnostic_engine, drug_intelligence, reidentification_simulator, population_analytics
@@ -2905,9 +2915,16 @@ def startup_event():
         print("[MedShield] ⚙️ Computing Population Analytics...")
         population_analytics = PopulationHealthAnalytics(df)
         
+        # Initialize LLM Exporter
+        global llm_exporter
+        from medshield.services.llm_exporter import LLMFineTuningExporter
+        print("[MedShield] ⚙️ Initializing LLM Exporter...")
+        llm_exporter = LLMFineTuningExporter(df)
+        
         print("[MedShield] ✅ All Clinical AI Engines Ready!\n")
     except Exception as e:
         print(f"[MedShield] ❌ Failed to initialize engines: {e}")
+
 
 
 if __name__ == "__main__":
