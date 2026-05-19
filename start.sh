@@ -1,14 +1,29 @@
 #!/bin/bash
+set -e
 
-# Start FastAPI backend in the background on the internal port
-echo "Starting FastAPI backend..."
-uvicorn backend_api:app --host 127.0.0.1 --port 8003 &
+echo "============================================"
+echo "  MedShield Unified Server Starting..."
+echo "============================================"
 
-# Wait briefly for backend to initialize
-sleep 3
+# Start FastAPI backend in the background
+echo "[1/2] Starting FastAPI backend on port 8003..."
+cd /app
+uvicorn backend_api:app --host 0.0.0.0 --port 8003 --log-level info &
+BACKEND_PID=$!
 
-# Start Next.js frontend in the foreground
-echo "Starting Next.js frontend..."
-cd frontend
-export PORT=${PORT:-3000}
-npm start
+# Wait for backend to be healthy
+echo "[*] Waiting for backend to initialize..."
+sleep 5
+
+# Verify backend is alive
+if kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "[✓] FastAPI backend is running (PID: $BACKEND_PID)"
+else
+    echo "[✗] FastAPI backend FAILED to start! Check logs above."
+    exit 1
+fi
+
+# Start Next.js frontend on Render's assigned PORT
+echo "[2/2] Starting Next.js frontend on port ${PORT:-3000}..."
+cd /app/frontend
+npx next start -p ${PORT:-3000}
