@@ -15,7 +15,7 @@ plotly>=5.14.0
 spacy>=3.5.0
 
 # Image Processing
-opencv-python>=4.7.0
+opencv-python-headless>=4.7.0
 Pillow>=9.5.0
 
 # API Server
