@@ -1,167 +1,168 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+// Circular Progress Ring Component
+const CircularProgress = ({ value }: { value: number }) => {
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="relative w-40 h-40 flex items-center justify-center">
+      <svg className="transform -rotate-90 w-40 h-40">
+        <circle
+          className="text-white/10"
+          strokeWidth="12"
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx="80"
+          cy="80"
+        />
+        <circle
+          className={`transition-all duration-1000 ease-out ${value >= 100 ? 'text-emerald-500' : 'text-amber-500'}`}
+          strokeWidth="12"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx="80"
+          cy="80"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-display font-bold text-white tabular-nums">{value}%</span>
+        <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">Score</span>
+      </div>
+    </div>
+  );
+};
 
 export default function CompliancePage() {
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<any>(null);
-  const [error, setError] = useState('');
-  const [numRecords, setNumRecords] = useState(1000);
+  const [data, setData] = useState({
+    score: 0,
+    passed: 0,
+    total: 6,
+    checks: [
+      { name: 'No direct identifiers in output', status: true, detail: 'PII detection pipeline flags all direct identifiers', last_verified: 'Loading...' },
+      { name: 'Data minimization', status: true, detail: 'Only necessary columns are processed; raw data never leaves the server', last_verified: 'Loading...' },
+      { name: 'Purpose limitation', status: true, detail: 'Anonymization strictly for research and clinical analytics purposes', last_verified: 'Loading...' },
+      { name: 'Irreversibility', status: true, detail: 'SHA-256 hashing, Laplace noise, and chaos perturbation are computationally irreversible', last_verified: 'Loading...' },
+      { name: 'Audit trail', status: true, detail: 'All operations are logged with timestamps, parameters, and user identity', last_verified: 'Loading...' },
+      { name: 'Re-identification resistance', status: true, detail: 'Layered protection: k-Anonymity + ℓ-Diversity + t-Closeness combined', last_verified: 'Loading...' },
+    ]
+  });
 
-  const handleScan = async () => {
-    setScanning(true); setError('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchChecks = async () => {
     try {
-      // Generate data then run pseudonymization to check compliance
-      const genRes = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ num_records: numRecords, data_type: 'medical' }),
-      });
-      const genData = await genRes.json();
-      if (!genRes.ok) throw new Error(genData.detail);
-
-      // Run pseudonymization (strongest compliance method)
-      const anonRes = await fetch('/api/anonymize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: genData.filename,
-          algorithm: 'pseudonymization',
-          quasi_identifiers: genData.suggestions?.direct_identifiers || ['name', 'email', 'phone'],
-          sensitive_attributes: genData.suggestions?.sensitive_attributes || ['disease'],
-          params: {},
-        }),
-      });
-      const anonData = await anonRes.json();
-      if (!anonRes.ok) throw new Error(anonData.detail);
-
-      setScanResult({
-        filename: genData.filename,
-        total_records: genData.total_records,
-        columns: genData.columns,
-        suggestions: genData.suggestions,
-        metrics: anonData.metrics,
-        preview: anonData.preview,
-        anonColumns: anonData.columns,
-      });
-    } catch (e: any) { setError(e.message); }
-    setScanning(false);
+      const res = await fetch('http://localhost:8003/api/compliance/checks');
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+        setLoading(false);
+      }
+    } catch (e) {
+      // Handle error gracefully
+    }
   };
 
-  const checks = [
-    { name: 'No direct identifiers in output', status: scanResult ? scanResult.metrics.dpdp_compliant : true, detail: 'PII detection pipeline flags all direct identifiers (name, email, phone, Aadhar)' },
-    { name: 'Data minimization', status: true, detail: 'Only necessary columns are processed; raw data never leaves the server' },
-    { name: 'Purpose limitation', status: true, detail: 'Anonymization strictly for research and clinical analytics purposes' },
-    { name: 'Irreversibility', status: true, detail: 'SHA-256 hashing, Laplace noise, and chaos perturbation are computationally irreversible' },
-    { name: 'Audit trail', status: true, detail: 'All operations are logged with timestamps, parameters, and user identity' },
-    { name: 'Re-identification resistance', status: true, detail: 'Layered protection: k-Anonymity + ℓ-Diversity + t-Closeness combined' },
-  ];
-
-  const passed = checks.filter(c => c.status).length;
-  const score = (passed / checks.length * 100).toFixed(0);
+  useEffect(() => {
+    fetchChecks();
+    const interval = setInterval(fetchChecks, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-display font-bold text-white">✅ DPDP Act Compliance Report</h2>
-          <p className="text-sm text-slate-400">Digital Personal Data Protection Act, 2023 — Automated Verification</p>
+          <h2 className="text-xl font-display font-bold text-white">✅ DPDP Act Live Compliance</h2>
+          <p className="text-sm text-slate-400">Digital Personal Data Protection Act, 2023 — Real-Time Verification</p>
         </div>
-        <button onClick={handleScan} disabled={scanning} className="btn-primary text-sm !py-2.5">
-          {scanning ? 'Scanning...' : '🔍 Run Compliance Scan'}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative flex h-2.5 w-2.5">
+             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${data.score === 100 ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+             <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${data.score === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+          </div>
+          <span className="text-xs text-slate-400 font-medium">Monitoring Active</span>
+        </div>
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-xl text-sm">⚠️ {error}</div>}
-
-      {/* Score */}
-      <div className="glass-strong p-6 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium text-slate-400 mb-1">Overall Compliance Score</h3>
-          <div className={`text-4xl font-display font-bold ${+score >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>{score}%</div>
-          <p className="text-xs text-slate-500 mt-2">{passed}/{checks.length} automated checks passed</p>
-        </div>
-        <div className="w-48">
-          <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-700 ${+score >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-              style={{ width: `${score}%` }} />
+      <div className="grid lg:grid-cols-[300px_1fr] gap-6">
+        
+        {/* Overall Score Card */}
+        <div className="glass-strong p-8 flex flex-col items-center justify-center text-center">
+          <CircularProgress value={data.score} />
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              {data.score === 100 ? 'Fully Compliant' : 'Partial Compliance'}
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              The system currently passes {data.passed} out of {data.total} automated DPDP requirements.
+            </p>
+            <button 
+              onClick={() => { setLoading(true); fetchChecks(); }} 
+              className="btn-secondary w-full text-xs flex items-center justify-center gap-2"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Force Re-evaluation
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Checklist */}
-      <div className="glass overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-          <h3 className="font-semibold text-white text-sm">DPDP Compliance Checklist</h3>
-        </div>
-        <div className="p-4 space-y-4">
-          {checks.map((c, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 ${
-                c.status ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-              }`}>
-                {c.status ? '✓' : '✕'}
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-white">{c.name}</h4>
-                <p className="text-xs text-slate-400 mt-0.5">{c.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Scan results */}
-      {scanResult && (
-        <>
-          <div className="glass overflow-hidden">
-            <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-              <h3 className="font-semibold text-white text-sm">📋 PII Column Detection — {scanResult.filename}</h3>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="rounded-xl border p-4 border-red-500/30 bg-red-500/5">
-                  <div className="text-xs font-semibold text-red-400 mb-2">🔴 Direct Identifiers ({scanResult.suggestions.direct_identifiers.length})</div>
-                  <div className="text-[10px] text-slate-500 mb-2">Must be removed or hashed</div>
-                  {scanResult.suggestions.direct_identifiers.map((c: string) => (
-                    <div key={c} className="bg-white/5 px-2 py-1 rounded text-xs text-white mb-1">{c} → <span className="text-red-400">HASH/REMOVE</span></div>
-                  ))}
-                </div>
-                <div className="rounded-xl border p-4 border-amber-500/30 bg-amber-500/5">
-                  <div className="text-xs font-semibold text-amber-400 mb-2">🟡 Quasi-Identifiers ({scanResult.suggestions.quasi_identifiers.length})</div>
-                  <div className="text-[10px] text-slate-500 mb-2">Should be generalized</div>
-                  {scanResult.suggestions.quasi_identifiers.map((c: string) => (
-                    <div key={c} className="bg-white/5 px-2 py-1 rounded text-xs text-white mb-1">{c} → <span className="text-amber-400">GENERALIZE</span></div>
-                  ))}
-                </div>
-                <div className="rounded-xl border p-4 border-violet-500/30 bg-violet-500/5">
-                  <div className="text-xs font-semibold text-violet-400 mb-2">🟣 Sensitive ({scanResult.suggestions.sensitive_attributes.length})</div>
-                  <div className="text-[10px] text-slate-500 mb-2">Protected by diversity constraints</div>
-                  {scanResult.suggestions.sensitive_attributes.map((c: string) => (
-                    <div key={c} className="bg-white/5 px-2 py-1 rounded text-xs text-white mb-1">{c} → <span className="text-violet-400">PROTECT</span></div>
-                  ))}
-                </div>
-              </div>
-            </div>
+        {/* Compliance Checks Feed */}
+        <div className="glass overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+            <h3 className="font-semibold text-white text-sm">Automated Compliance Feed</h3>
+            <span className="text-xs text-slate-500">Updates live after every run</span>
           </div>
-
-          {/* Anonymization Metrics from Scan */}
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { label: 'Privacy', value: scanResult.metrics.privacy_score, color: 'text-indigo-400' },
-              { label: 'Utility', value: scanResult.metrics.utility_score, color: 'text-cyan-400' },
-              { label: 'Risk', value: scanResult.metrics.disclosure_risk, color: 'text-emerald-400' },
-              { label: 'Records', value: scanResult.metrics.records_processed, color: 'text-white' },
-            ].map((m, i) => (
-              <div key={i} className="glass p-4 text-center">
-                <div className={`text-xl font-display font-bold ${m.color}`}>
-                  {typeof m.value === 'number' && m.value < 10 ? m.value.toFixed(3) : m.value.toLocaleString()}
+          
+          <div className="divide-y divide-white/5">
+            {data.checks.map((check, i) => (
+              <div 
+                key={i} 
+                className={`p-5 transition-colors duration-500 flex items-start gap-4 ${check.status ? 'hover:bg-emerald-500/5' : 'bg-red-500/5 hover:bg-red-500/10'}`}
+              >
+                {/* Status Badge */}
+                <div className="shrink-0 mt-0.5">
+                  {check.status ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      Pass
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                      Fail
+                    </span>
+                  )}
                 </div>
-                <div className="text-xs text-slate-500 mt-1">{m.label}</div>
+
+                {/* Info */}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="text-sm font-medium text-white">{check.name}</h4>
+                    <span className="text-[10px] text-slate-500 bg-white/5 px-2 py-0.5 rounded whitespace-nowrap">
+                      {check.last_verified}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {check.detail}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </>
-      )}
+        </div>
+        
+      </div>
     </div>
   );
 }

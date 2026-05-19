@@ -78,18 +78,24 @@ export default function DatasetsPage() {
             className="w-28 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white text-center focus:outline-none focus:border-indigo-500" />
           <span className="text-xs text-slate-400">records</span>
         </div>
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid md:grid-cols-3 gap-3">
           <button onClick={() => handleGenerate('medical')} disabled={generating}
             className="glass p-5 hover:bg-white/[0.06] transition-all text-left disabled:opacity-50">
             <div className="text-2xl mb-2">🏥</div>
             <h4 className="text-white font-medium text-sm">Medical Records</h4>
-            <p className="text-xs text-slate-500 mt-1">12 columns: patient_id, age, gender, disease, blood_sugar, cholesterol, etc.</p>
+            <p className="text-xs text-slate-500 mt-1">25 columns: patient_id, age, gender, diagnosis, vitals, medications, etc.</p>
           </button>
-          <button onClick={() => handleGenerate('text')} disabled={generating}
+          <button onClick={() => handleGenerate('prescription')} disabled={generating}
             className="glass p-5 hover:bg-white/[0.06] transition-all text-left disabled:opacity-50">
             <div className="text-2xl mb-2">📝</div>
-            <h4 className="text-white font-medium text-sm">Clinical Text Notes</h4>
-            <p className="text-xs text-slate-500 mt-1">Free-text notes with embedded PII (names, phones, emails) for redaction testing.</p>
+            <h4 className="text-white font-medium text-sm">Prescription Text</h4>
+            <p className="text-xs text-slate-500 mt-1">Free-text prescriptions with embedded PII for OCR and redaction testing.</p>
+          </button>
+          <button onClick={() => handleGenerate('xray')} disabled={generating}
+            className="glass p-5 hover:bg-white/[0.06] transition-all text-left disabled:opacity-50">
+            <div className="text-2xl mb-2">🩻</div>
+            <h4 className="text-white font-medium text-sm">X-Ray Reports</h4>
+            <p className="text-xs text-slate-500 mt-1">Radiology reports with findings, impressions, and patient identifiers.</p>
           </button>
         </div>
         {generating && <p className="text-center text-indigo-400 text-sm animate-pulse mt-3">Generating {numRecords} records...</p>}

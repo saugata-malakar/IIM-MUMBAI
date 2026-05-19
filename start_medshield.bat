@@ -26,10 +26,14 @@ timeout /t 5 /nobreak >nul
 
 echo.
 echo ===================================================
-echo    READY! Open your browser to:
+echo    READY! Opening browser automatically...
 echo.
 echo    http://localhost:3000
 echo.
 echo ===================================================
 echo.
+
+REM Auto-open browser
+start http://localhost:3000
+
 pause

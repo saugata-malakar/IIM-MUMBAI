@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊', desc: 'Overview' },
+  { href: '/dashboard/clinical-ai', label: 'Clinical AI', icon: '🧠', desc: '8 AI-powered sections' },
   { href: '/dashboard/anonymize', label: 'Anonymize', icon: '🔒', desc: 'Run algorithms' },
   { href: '/dashboard/vision', label: 'Vision AI', icon: '👁️', desc: 'Image & OCR Redaction' },
   { href: '/dashboard/benchmark', label: 'Benchmark', icon: '📈', desc: 'Compare results' },
