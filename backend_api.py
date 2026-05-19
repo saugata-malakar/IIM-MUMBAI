@@ -2872,9 +2872,47 @@ def get_all_algorithms():
     return {"status": "success", "algorithms": algorithms, "total": len(algorithms)}
 
 
+@app.on_event("startup")
+def startup_event():
+    """Auto-initialize clinical engines with synthetic data on startup so they are immediately usable."""
+    print("\n[MedShield] 🚀 Initializing Clinical AI Engines...")
+    try:
+        # Generate dummy synthetic dataset
+        generator = SyntheticGenerator(num_records=500, data_type="medical")
+        df = generator.generate()
+        
+        # We must add 'diagnosis' and 'medications' if missing because services need them
+        if 'diagnosis' not in df.columns:
+            diagnoses = ['Diabetes Type 2', 'Hypertension', 'Coronary Artery Disease', 'COVID-19', 'Asthma']
+            df['diagnosis'] = np.random.choice(diagnoses, len(df))
+            
+        if 'medications' not in df.columns:
+            meds_list = ['Metformin, Insulin', 'Amlodipine, Lisinopril', 'Atorvastatin', 'Paracetamol', 'Albuterol']
+            df['medications'] = np.random.choice(meds_list, len(df))
+
+        # Initialize globals
+        global diagnostic_engine, drug_intelligence, reidentification_simulator, population_analytics
+        
+        print("[MedShield] ⚙️ Training Diagnostic Engine...")
+        diagnostic_engine = ClinicalAIDiagnosticEngine(df)
+        
+        print("[MedShield] ⚙️ Indexing Drug Intelligence...")
+        drug_intelligence = DrugIntelligencePanel(df)
+        
+        print("[MedShield] ⚙️ Starting Re-identification Simulator...")
+        reidentification_simulator = ReidentificationSimulator(df)
+        
+        print("[MedShield] ⚙️ Computing Population Analytics...")
+        population_analytics = PopulationHealthAnalytics(df)
+        
+        print("[MedShield] ✅ All Clinical AI Engines Ready!\n")
+    except Exception as e:
+        print(f"[MedShield] ❌ Failed to initialize engines: {e}")
+
+
 if __name__ == "__main__":
     import uvicorn
     print("\n🛡️  MedShield API Starting...")
-    print("📍 API Docs:    http://localhost:8003/docs")
-    print("📍 Frontend:    http://localhost:3000\n")
+    print("📍 API Docs:    http://0.0.0.0:8003/docs")
+    print("📍 Frontend:    http://0.0.0.0:3000\n")
     uvicorn.run(app, host="0.0.0.0", port=8003, reload=False)
