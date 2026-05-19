@@ -8,7 +8,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100-green)
 ![License](https://img.shields.io/badge/License-Research-orange)
 
-### 🌐 [Live Interactive Demo: MedShield Platform](https://iim-mumbai-1j2d.vercel.app/)
+### 🌐 [Live Production Deployment: MedShield Platform](https://iim-mumbai-1.onrender.com/)
 
 ---
 
