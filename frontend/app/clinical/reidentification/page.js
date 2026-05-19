@@ -1,4 +1,4 @@
-import ReidentificationAttackSimulator from '../../components/ReidentificationAttackSimulator';
+import ReidentificationAttackSimulator from '../../../components/ReidentificationAttackSimulator';
 
 export default function Page() {
   return <ReidentificationAttackSimulator />;

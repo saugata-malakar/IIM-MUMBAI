@@ -1,4 +1,4 @@
-import PrescriptionOCRLab from '../../components/PrescriptionOCRLab';
+import PrescriptionOCRLab from '../../../components/PrescriptionOCRLab';
 
 export default function Page() {
   return <PrescriptionOCRLab />;
