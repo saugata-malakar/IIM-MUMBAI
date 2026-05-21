@@ -1,13 +1,14 @@
 /**
- * useMedShield.js — Drop into: src/hooks/useMedShield.js
- * Central API client for all 8 new sections.
- * Base URL auto-detects dev vs prod.
+ * useMedShield.js — Central API client for all 8 Clinical AI sections.
+ * Uses RELATIVE URLs so requests go through the Next.js proxy on both
+ * localhost AND production (Render).
  */
 
-const BASE = process.env.REACT_APP_API_URL || "http://localhost:8003/api/sections";
-
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(`${BASE}${path}`, {
+  // ALWAYS use relative URL — the Next.js proxy at /api/[...slug]/route.js
+  // will forward to the Python backend at 127.0.0.1:8003 inside the container.
+  const url = `/api/sections${path}`;
+  const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
     ...opts,
   });

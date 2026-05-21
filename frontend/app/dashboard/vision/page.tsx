@@ -54,7 +54,8 @@ export default function VisionPage() {
       if (!uploadRes.ok) throw new Error(uploadData.detail || 'Upload failed');
       
       // 2. Connect WebSocket
-      const wsUrl = `ws://localhost:8003/ws/vision`;
+      const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProto}//${window.location.host}/api/ws/vision`;
       const ws = new WebSocket(wsUrl);
       
       // Setup fake scanline ticker

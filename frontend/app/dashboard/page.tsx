@@ -102,7 +102,7 @@ export default function DashboardPage() {
     setMounted(true);
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://localhost:8003/api/dashboard/summary');
+        const res = await fetch('/api/dashboard/summary');
         if (res.ok) {
           const data = await res.json();
           if (data.stats) {

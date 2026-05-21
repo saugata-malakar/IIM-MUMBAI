@@ -8,13 +8,20 @@ export async function POST(request, { params }) {
   return handleProxy(request);
 }
 
+export async function PUT(request, { params }) {
+  return handleProxy(request);
+}
+
+export async function DELETE(request, { params }) {
+  return handleProxy(request);
+}
+
 async function handleProxy(request) {
   try {
     const url = new URL(request.url);
-    // Remove '/api' from the start of the pathname, since we are mounting at /api
     const targetUrl = `http://127.0.0.1:8003${url.pathname}${url.search}`;
     
-    console.log(`[Next.js Proxy] Forwarding ${request.method} to ${targetUrl}`);
+    console.log(`[MedShield Proxy] ${request.method} → ${targetUrl}`);
 
     const headers = new Headers(request.headers);
     headers.delete('host');
@@ -32,9 +39,12 @@ async function handleProxy(request) {
       }
     }
 
-    // Add 15-second timeout
+    // Use a longer timeout for SSE/streaming endpoints (benchmark, etc.)
+    const isStreaming = url.pathname.includes('/stream') || url.pathname.includes('/benchmark');
+    const timeoutMs = isStreaming ? 300000 : 30000; // 5 min for streams, 30s for normal
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     fetchOptions.signal = controller.signal;
 
     const response = await fetch(targetUrl, fetchOptions);
@@ -43,16 +53,16 @@ async function handleProxy(request) {
     const responseHeaders = new Headers(response.headers);
     responseHeaders.set('Access-Control-Allow-Origin', '*');
 
-    // Return the raw response body stream so binary files (ZIPs, CSVs, Images) are not corrupted
+    // Return the raw response body stream — works for JSON, SSE, binary files, everything
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
   } catch (error) {
-    console.error('[Next.js Proxy Error]:', error);
+    console.error('[MedShield Proxy Error]:', error.message);
     return NextResponse.json(
-      { status: 'error', message: 'Proxy failed to connect to Python backend.', details: error.message },
+      { status: 'error', message: 'Backend connection failed. The Python server may still be starting up.', details: error.message },
       { status: 502 }
     );
   }

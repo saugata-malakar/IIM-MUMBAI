@@ -59,7 +59,7 @@ export default function CompliancePage() {
 
   const fetchChecks = async () => {
     try {
-      const res = await fetch('http://localhost:8003/api/compliance/checks');
+      const res = await fetch('/api/compliance/checks');
       if (res.ok) {
         const json = await res.json();
         setData(json);

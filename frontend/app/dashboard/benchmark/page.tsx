@@ -114,7 +114,7 @@ export default function BenchmarkPage() {
       });
 
       // Step 2: Open SSE stream
-      const eventSource = new EventSource(`http://localhost:8003/api/benchmark/stream?${query.toString()}`);
+      const eventSource = new EventSource(`/api/benchmark/stream?${query.toString()}`);
 
       eventSource.onmessage = (event) => {
         const payload = JSON.parse(event.data);
